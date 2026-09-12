@@ -1,0 +1,21 @@
+# Блок сайта OrbitLink для СИСТЕМНОГО Caddy сервера svo.
+#
+# Дописывается в конец /etc/caddy/Caddyfile вручную, после резервной копии.
+# Свой прокси в compose не поднимается: порты 80/443 на сервере уже заняты
+# Caddy, который обслуживает соседние проекты.
+#
+# TLS-сертификат Caddy получит сам при первом обращении — но только когда
+# A-запись nn-hac.kurligin.ru указывает на 72.56.7.54.
+
+nn-hac.kurligin.ru {
+	encode zstd gzip
+	import sec_headers
+	import accesslog orbitlink
+
+	# Пакет состояния сети весит около мегабайта, прогон суток — около секунды.
+	reverse_proxy 127.0.0.1:8095 {
+		transport http {
+			read_timeout 120s
+		}
+	}
+}

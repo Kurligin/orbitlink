@@ -1,0 +1,274 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>OrbitLink</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#16181d;        /* фон приложения */
+  --panel:#1c1f26;     /* панели */
+  --view:#0b0d11;      /* вьюпорт */
+  --line:#2a2e37;      /* разделители */
+  --fg:#e8eaed;
+  --fg-2:#9aa0aa;      /* вторичный */
+  --fg-3:#6b7280;      /* третичный */
+  --accent:#4a8cff;
+  --ok:#5aa86f; --warn:#c9a227; --bad:#c4595a;
+  --h:34px;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 13px/1.45 Inter,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.m{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+
+/* меню */
+.menubar{height:var(--h);display:flex;align-items:center;gap:18px;padding:0 12px;border-bottom:1px solid var(--line)}
+.menubar a{color:var(--fg-2);text-decoration:none;font-size:13px;cursor:default}
+.menubar a:hover{color:var(--fg)}
+.menubar .sep{flex:1}
+.scn{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--fg-2)}
+.scn b{color:var(--fg);font-weight:500}
+
+/* вкладки */
+.tabs{height:var(--h);display:flex;align-items:stretch;gap:0;padding:0 12px;border-bottom:1px solid var(--line)}
+.tabs a{display:flex;align-items:center;padding:0 14px;color:var(--fg-2);text-decoration:none;font-size:13px;
+  border-bottom:2px solid transparent;margin-bottom:-1px;cursor:default}
+.tabs a[aria-current]{color:var(--fg);border-bottom-color:var(--accent)}
+.tabs a:hover{color:var(--fg)}
+
+/* раскладка */
+.app{display:grid;grid-template-columns:1fr 292px;height:calc(100vh - 2*var(--h));min-height:660px}
+.left{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line)}
+.right{display:flex;flex-direction:column;min-width:0;background:var(--panel)}
+
+/* вьюпорт */
+.view{flex:1;position:relative;background:var(--view);overflow:hidden;min-height:340px}
+.vtools{position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:3}
+.vtools .r{position:absolute;top:10px;right:10px}
+.seg{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:rgba(28,31,38,.9);
+  backdrop-filter:blur(6px)}
+.seg button{border:0;background:transparent;color:var(--fg-2);font:400 12px Inter;padding:5px 11px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:#fff}
+.pick{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:5px;
+  background:rgba(28,31,38,.9);padding:5px 10px;font-size:12px;color:var(--fg);cursor:pointer}
+.pick svg{width:11px;height:11px;color:var(--fg-3)}
+
+.globe{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(78%,430px);aspect-ratio:1;
+  border-radius:50%;background:
+    radial-gradient(circle at 36% 30%, #2b4a63 0%, #1d3446 38%, #12222f 62%, #0c151d 100%);
+  box-shadow:inset -18px -12px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(74,140,255,.10), 0 0 40px rgba(74,140,255,.05)}
+.land{position:absolute;background:#35503f;opacity:.55;border-radius:44% 56% 52% 48%/48% 44% 56% 52%}
+.orb{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;
+  border:1px solid rgba(154,160,170,.22)}
+.orb.b{border-color:rgba(74,140,255,.30)}
+.sat{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px}
+.sat i{width:4px;height:4px;border-radius:50%;background:#cfd6e0;display:block;flex:none}
+.sat span{font:400 9px 'JetBrains Mono';color:var(--fg-2);background:rgba(11,13,17,.72);padding:1px 3px;border-radius:2px}
+.gs{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px}
+.gs i{width:7px;height:7px;display:block;flex:none;background:var(--warn);border-radius:50%}
+.gs.gw i{background:var(--accent);border-radius:1px;transform:rotate(45deg)}
+.gs span{font:500 9px 'JetBrains Mono';color:var(--fg);background:rgba(11,13,17,.78);padding:1px 4px;border-radius:2px}
+.route{position:absolute;height:1.5px;background:var(--accent);transform-origin:0 50%;border-radius:2px}
+.vfoot{position:absolute;left:10px;bottom:10px;display:flex;gap:8px;font:400 11px 'JetBrains Mono';color:var(--fg-2)}
+.vfoot div{background:rgba(28,31,38,.9);border:1px solid var(--line);border-radius:5px;padding:4px 9px}
+
+/* таймлайн */
+.tl{flex:none;border-top:1px solid var(--line);padding:10px 12px 12px}
+.tl-head{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.play{width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:transparent;color:var(--fg);
+  display:grid;place-items:center;cursor:pointer}
+.play svg{width:11px;height:11px}
+.tl-head .t{font:500 12px 'JetBrains Mono'}
+.tl-head .s{font-size:12px;color:var(--fg-3)}
+.rail{height:4px;background:#262a33;border-radius:2px;position:relative;margin:0 0 4px}
+.rail .k{position:absolute;left:38%;top:-5px;width:10px;height:14px;background:var(--accent);border-radius:2px}
+.rail-t{display:flex;justify-content:space-between;font:400 10px 'JetBrains Mono';color:var(--fg-3)}
+
+.av{margin-top:12px}
+.av-h{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.av-h b{font-weight:500;font-size:12px}
+.lg{display:flex;gap:12px;font-size:11px;color:var(--fg-2);margin-left:auto}
+.lg i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:-1px}
+.strip-row{display:grid;grid-template-columns:38px 1fr 42px;align-items:center;gap:9px;margin-bottom:4px}
+.strip-row .n{font:400 11px 'JetBrains Mono';color:var(--fg-2)}
+.strip-row .p{font:500 11px 'JetBrains Mono';text-align:right}
+.strip{height:11px;border-radius:2px;display:flex;overflow:hidden}
+.strip i{height:100%;display:block}
+.s2{background:#3f6ea8}
+.s1{background:var(--warn);background-image:repeating-linear-gradient(90deg,transparent 0 1px,rgba(0,0,0,.45) 1px 2px)}
+.s0{background:var(--bad);background-image:repeating-linear-gradient(90deg,transparent 0 1px,rgba(0,0,0,.5) 1px 2px)}
+
+/* правая колонка */
+.sec{border-bottom:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.sec > h2{height:30px;flex:none;display:flex;align-items:center;gap:7px;padding:0 10px;font:500 12px Inter;
+  color:var(--fg-2)}
+.sec > h2 svg{width:12px;height:12px;color:var(--fg-3)}
+.tree{overflow:auto;padding:0 6px 8px;font-size:12px;max-height:190px}
+.tree .g,.tree .i{display:flex;align-items:center;gap:6px;height:23px;padding:0 6px;border-radius:4px;cursor:default}
+.tree .g{color:var(--fg)}
+.tree .i{color:var(--fg-2);padding-left:24px;font-family:'JetBrains Mono';font-size:11px}
+.tree .i:hover,.tree .g:hover{background:#22262e}
+.tree .i[aria-selected]{background:rgba(74,140,255,.16);color:var(--fg)}
+.tree svg{width:11px;height:11px;color:var(--fg-3);flex:none}
+.tree .more{padding-left:24px;height:22px;display:flex;align-items:center;color:var(--fg-3);font-size:11px}
+
+.props{overflow:auto;padding:2px 10px 10px}
+.grp{margin-bottom:10px}
+.grp > h3{display:flex;align-items:center;gap:6px;height:24px;font:500 12px Inter;color:var(--fg-2)}
+.grp > h3 svg{width:11px;height:11px;color:var(--fg-3)}
+.f{display:grid;grid-template-columns:1fr 104px;align-items:center;gap:8px;height:26px}
+.f label{font-size:12px;color:var(--fg-2)}
+.f .v{height:24px;border:1px solid var(--line);border-radius:4px;background:#15171c;display:flex;align-items:center;
+  justify-content:space-between;padding:0 7px;font:400 12px 'JetBrains Mono'}
+.f .v u{text-decoration:none;color:var(--fg-3);font-size:11px}
+
+/* статусная строка */
+.status{height:26px;display:flex;align-items:center;gap:16px;padding:0 12px;border-top:1px solid var(--line);
+  font:400 11px 'JetBrains Mono';color:var(--fg-2);background:var(--panel)}
+.status .sep{flex:1}
+.status b{color:var(--fg);font-weight:500}
+</style>
+
+<div class="menubar">
+  <a>Проект</a><a>Правка</a><a>Вид</a><a>Расчёт</a>
+  <span class="sep"></span>
+  <span class="scn">Сценарий: <b>full_constellation</b></span>
+</div>
+
+<div class="tabs">
+  <a aria-current="page">Сеть</a><a>Устойчивость</a><a>Сравнение</a><a>Проверка</a>
+</div>
+
+<div class="app">
+  <div class="left">
+    <div class="view">
+      <div class="vtools">
+        <div class="seg"><button aria-pressed="true">3D</button><button>2D полярная</button></div>
+        <div class="pick">C65
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="vtools r"><div class="pick">Оверлеи
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div></div>
+
+      <div class="globe">
+        <div class="land" style="left:18%;top:26%;width:30%;height:22%"></div>
+        <div class="land" style="left:46%;top:18%;width:40%;height:30%"></div>
+        <div class="land" style="left:30%;top:56%;width:22%;height:26%"></div>
+        <div class="land" style="left:62%;top:58%;width:18%;height:18%"></div>
+      </div>
+      <div class="orb b" style="width:104%;aspect-ratio:1/0.34"></div>
+      <div class="orb" style="width:104%;aspect-ratio:1/0.34;transform:translate(-50%,-50%) rotate(58deg)"></div>
+      <div class="orb" style="width:104%;aspect-ratio:1/0.34;transform:translate(-50%,-50%) rotate(-58deg)"></div>
+
+      <div class="sat" style="left:38%;top:22%"><i></i><span>S04</span></div>
+      <div class="sat" style="left:56%;top:17%"><i></i><span>S03</span></div>
+      <div class="sat" style="left:27%;top:33%"><i></i><span>S19</span></div>
+      <div class="sat" style="left:69%;top:31%"><i></i><span>S36</span></div>
+      <div class="sat" style="left:72%;top:52%"><i></i><span>S22</span></div>
+      <div class="sat" style="left:24%;top:57%"><i></i><span>S06</span></div>
+      <div class="sat" style="left:44%;top:72%"><i></i><span>S08</span></div>
+      <div class="sat" style="left:61%;top:40%"><i></i><span>S21</span></div>
+      <div class="sat" style="left:41%;top:38%"><i></i><span>S05</span></div>
+
+      <div class="route" style="left:47%;top:46%;width:88px;transform:rotate(-28deg)"></div>
+      <div class="route" style="left:41%;top:38%;width:64px;transform:rotate(158deg)"></div>
+
+      <div class="gs gw" style="left:33%;top:42%"><i></i><span>MUR</span></div>
+      <div class="gs" style="left:47%;top:46%"><i></i><span>C65</span></div>
+      <div class="gs" style="left:57%;top:37%"><i></i><span>C70</span></div>
+      <div class="gs" style="left:63%;top:29%"><i></i><span>C72</span></div>
+
+      <div class="vfoot">
+        <div>09:37:03 · сутки расчёта</div>
+        <div>маршрут C65 → S05 → S21 → MUR</div>
+      </div>
+    </div>
+
+    <div class="tl">
+      <div class="tl-head">
+        <button class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+        <span class="t">09:37</span><span class="s">/ 24:00 · шаг 120 с · отсчёт 289 из 720</span>
+      </div>
+      <div class="rail"><div class="k"></div></div>
+      <div class="rail-t"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+
+      <div class="av">
+        <div class="av-h">
+          <b>Доступность связи по времени</b>
+          <span class="lg">
+            <span><i class="s2"></i>есть путь</span>
+            <span><i class="s1"></i>виден, пути нет</span>
+            <span><i class="s0"></i>спутник не виден</span>
+          </span>
+        </div>
+        <div class="strip-row"><span class="n">C65</span>
+          <span class="strip"><i class="s2" style="width:46%"></i><i class="s1" style="width:3%"></i><i class="s2" style="width:19%"></i><i class="s0" style="width:2%"></i><i class="s2" style="width:14%"></i><i class="s1" style="width:4%"></i><i class="s2" style="width:12%"></i></span>
+          <span class="p">96.7%</span></div>
+        <div class="strip-row"><span class="n">C70</span>
+          <span class="strip"><i class="s2" style="width:52%"></i><i class="s1" style="width:1%"></i><i class="s2" style="width:31%"></i><i class="s1" style="width:2%"></i><i class="s2" style="width:14%"></i></span>
+          <span class="p">98.8%</span></div>
+        <div class="strip-row"><span class="n">C72</span>
+          <span class="strip"><i class="s2" style="width:38%"></i><i class="s1" style="width:2%"></i><i class="s2" style="width:44%"></i><i class="s1" style="width:1%"></i><i class="s2" style="width:15%"></i></span>
+          <span class="p">98.9%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <section class="sec">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Аутлайнер</h2>
+      <div class="tree">
+        <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"/></svg>P1 · RAAN 0°</div>
+        <div class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg>S01</div>
+        <div class="i" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg>S05</div>
+        <div class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg>S06</div>
+        <div class="more">…ещё 13</div>
+        <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"/></svg>P2 · RAAN 60°</div>
+        <div class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/></svg>S21</div>
+        <div class="more">…ещё 15</div>
+        <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6l6 6-6 6"/></svg>P3 · RAAN 120°</div>
+      </div>
+    </section>
+
+    <section class="sec" style="flex:1">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Свойства</h2>
+      <div class="props">
+        <div class="grp">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"/></svg>Орбита</h3>
+          <div class="f"><label>Высота</label><div class="v">550 <u>км</u></div></div>
+          <div class="f"><label>Наклонение</label><div class="v">87 <u>°</u></div></div>
+          <div class="f"><label>Очередь запуска</label><div class="v">3 <u>из 3</u></div></div>
+        </div>
+        <div class="grp">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"/></svg>Связь</h3>
+          <div class="f"><label>Мин. возвышение</label><div class="v">10 <u>°</u></div></div>
+          <div class="f"><label>Дальность ISL</label><div class="v">3000 <u>км</u></div></div>
+          <div class="f"><label>Стратегия</label><div class="v" style="font-size:11px">задержка</div></div>
+        </div>
+        <div class="grp">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"/></svg>Расчёт</h3>
+          <div class="f"><label>Горизонт</label><div class="v">86400 <u>с</u></div></div>
+          <div class="f"><label>Шаг</label><div class="v">120 <u>с</u></div></div>
+          <div class="f"><label>Целевая доступность</label><div class="v">0,9</div></div>
+        </div>
+        <div class="grp">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"/></svg>Отказы</h3>
+          <div class="f"><label>S31</label><div class="v" style="font-size:11px">06:00–24:00</div></div>
+          <div class="f"><label style="color:var(--accent)">Добавить отказ</label><div class="v" style="justify-content:center;color:var(--fg-3)">+</div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="status">
+  <span>t=<b>09:37</b></span>
+  <span>активных <b>48/48</b></span>
+  <span>маршрут <b>3</b> перехода</span>
+  <span>резерв <b>есть</b></span>
+  <span>перерывов <b>11</b></span>
+  <span class="sep"></span>
+  <span>cosmo-A-1.0</span>
+</div>

@@ -1,0 +1,937 @@
+@import "./tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 13px/1.45 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+select,
+input {
+  font-family: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Единое видимое кольцо фокуса на всё приложение */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 560px;
+}
+
+/* выбор сценария (используется в правой колонке экрана «Сеть») */
+.scn-select {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg);
+  font: 500 12px var(--font-ui);
+  border-radius: 4px;
+  padding: 3px 4px;
+}
+.scn-select:hover {
+  border-color: var(--line);
+}
+
+/* вкладки */
+.tabs {
+  height: var(--h);
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+.tabs button {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background: none;
+  border: 0;
+  color: var(--fg-2);
+  font-size: 13px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition:
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+.tabs button[aria-current="page"] {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+.tabs button:hover:not([aria-current="page"]) {
+  color: var(--fg);
+}
+.tabs button:disabled {
+  color: var(--fg-2);
+  cursor: default;
+}
+
+/* раскладка: слева состав группировки + параметры расчёта, по центру карта
+   с таймлайном, справа сценарий + сводка по модели и текущему отсчёту */
+.app {
+  display: grid;
+  grid-template-columns: 292px 1fr 292px;
+  flex: 1;
+  min-height: 0;
+}
+@media (max-width: 860px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .panels {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .center {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+.panels {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+  overflow: auto;
+}
+.center {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-right: 1px solid var(--line);
+}
+.right {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--panel);
+  overflow: auto;
+}
+
+/* вьюпорт */
+.view {
+  flex: 1;
+  position: relative;
+  background: var(--view);
+  overflow: hidden;
+  min-height: 300px;
+}
+.view canvas {
+  cursor: grab;
+}
+.view canvas:active {
+  cursor: grabbing;
+}
+.vtools {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+.vtools.r {
+  left: auto;
+  right: 10px;
+}
+.seg {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: rgba(28, 31, 38, 0.9);
+  backdrop-filter: blur(6px);
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  color: var(--fg-2);
+  font: 400 12px var(--font-ui);
+  padding: 5px 11px;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.seg button[aria-pressed="true"] {
+  background: var(--accent-strong);
+  color: #fff;
+}
+.seg button:hover:not([aria-pressed="true"]) {
+  color: var(--fg);
+}
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(28, 31, 38, 0.9);
+  padding: 0 7px 0 10px;
+  font-size: 12px;
+  color: var(--fg);
+}
+.pick select {
+  background: transparent;
+  border: 0;
+  color: var(--fg);
+  font: 400 12px var(--font-ui);
+  padding: 5px 0;
+  appearance: none;
+}
+.pick svg {
+  width: 11px;
+  height: 11px;
+  color: var(--fg-3);
+  flex: none;
+  pointer-events: none;
+}
+
+.viewport-surface {
+  position: absolute;
+  inset: 0;
+}
+
+.vfoot {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 8px;
+  font: 400 11px var(--font-mono);
+  color: var(--fg-2);
+  z-index: 2;
+  pointer-events: none;
+}
+.vfoot div {
+  background: rgba(28, 31, 38, 0.9);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px 9px;
+}
+
+.view-note {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  font: 400 11px var(--font-mono);
+  color: var(--warn);
+  background: rgba(28, 31, 38, 0.9);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 4px 9px;
+  max-width: 260px;
+}
+
+/* таймлайн */
+.tl {
+  flex: none;
+  border-top: 1px solid var(--line);
+  padding: 10px 12px 12px;
+}
+.tl-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.play {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--fg);
+  display: grid;
+  place-items: center;
+  flex: none;
+  transition: background var(--dur-fast) var(--ease);
+}
+.play:hover {
+  background: #22262e;
+}
+.play svg {
+  width: 11px;
+  height: 11px;
+}
+.tl-head .t {
+  font: 500 12px var(--font-mono);
+}
+.tl-head .s {
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.rail {
+  height: 4px;
+  background: #262a33;
+  border-radius: 2px;
+  position: relative;
+  margin: 0 0 4px;
+  cursor: pointer;
+}
+.rail .fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--accent-a30);
+  border-radius: 2px;
+}
+.rail .k {
+  position: absolute;
+  top: -5px;
+  width: 10px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+.rail-t {
+  display: flex;
+  justify-content: space-between;
+  font: 400 10px var(--font-mono);
+  color: var(--fg-2);
+}
+
+.av {
+  margin-top: 12px;
+}
+.av-h {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.av-h b {
+  font-weight: 500;
+  font-size: 12px;
+}
+.lg {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--fg-2);
+  margin-left: auto;
+}
+.lg i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+.strip-row {
+  display: grid;
+  grid-template-columns: 38px 1fr 42px;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 4px;
+}
+.strip-row .n {
+  font: 400 11px var(--font-mono);
+  color: var(--fg-2);
+}
+.strip-row .p {
+  font: 500 11px var(--font-mono);
+  text-align: right;
+}
+.strip {
+  height: 11px;
+  border-radius: 2px;
+  display: flex;
+  overflow: hidden;
+}
+.strip i {
+  height: 100%;
+  display: block;
+}
+/*
+ * Три уровня запаса связности различаются не только цветом, но и штриховкой
+ * (доступность): 2 — сплошная заливка, 1 — одна диагональ, 0 — перекрёстная
+ * штриховка (две диагонали друг на друга) — геометрически, а не только по
+ * цвету и насыщенности, отличимо при дальтонизме и на ч/б печати.
+ */
+.s2 {
+  background: var(--ok);
+}
+.s1 {
+  background: var(--warn);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.4) 2px 3px
+  );
+}
+.s0 {
+  background: var(--bad);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 1px,
+      rgba(0, 0, 0, 0.5) 1px 2px
+    ),
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 1px,
+      rgba(0, 0, 0, 0.5) 1px 2px
+    );
+}
+
+/* правая колонка */
+.sec {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sec > h2 {
+  height: 30px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  margin: 0;
+  font: 500 12px var(--font-ui);
+  color: var(--fg-2);
+}
+.sec > h2 svg {
+  width: 12px;
+  height: 12px;
+  color: var(--fg-3);
+}
+.tree {
+  overflow: auto;
+  padding: 0 6px 8px;
+  font-size: 12px;
+  /* Ровно одна развёрнутая плоскость (заголовок + 8 видимых аппаратов +
+     строка «ещё N») плюс заголовок следующей — граница контейнера всегда
+     проходит по целой строке высотой --tree-row, а не посередине неё, иначе
+     обрыв списка выглядит как поломка вёрстки. Список длиннее видимой
+     области почти всегда — прокрутка ожидаема, полоса прокрутки видна
+     постоянно, а не только оверлеем ОС. */
+  --tree-row: 23px;
+  --tree-more: 22px;
+  max-height: calc(var(--tree-row) * 10 + var(--tree-more));
+  scrollbar-width: thin;
+  scrollbar-color: var(--fg-3) transparent;
+}
+.tree::-webkit-scrollbar {
+  width: 8px;
+}
+.tree::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tree::-webkit-scrollbar-thumb {
+  background: var(--fg-3);
+  border-radius: 4px;
+}
+.tree::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-2);
+}
+.tree .g,
+.tree .i {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--tree-row);
+  padding: 0 6px;
+  border-radius: 4px;
+  width: 100%;
+  background: none;
+  border: 0;
+  text-align: left;
+}
+.tree .g {
+  color: var(--fg);
+}
+.tree .i {
+  color: var(--fg-2);
+  padding-left: 24px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.tree .i:hover,
+.tree .g:hover {
+  background: #22262e;
+}
+.tree .i[aria-selected="true"] {
+  background: var(--accent-a16);
+  color: var(--fg);
+}
+.tree svg {
+  width: 11px;
+  height: 11px;
+  color: var(--fg-3);
+  flex: none;
+  transition: transform var(--dur-fast) var(--ease);
+}
+.tree .g[aria-expanded="false"] svg.chev {
+  transform: rotate(-90deg);
+}
+.tree .more {
+  padding-left: 24px;
+  height: var(--tree-more);
+  display: flex;
+  align-items: center;
+  color: var(--fg-2);
+  font-size: 11px;
+  background: none;
+  border: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.props {
+  overflow: auto;
+  padding: 2px 10px 10px;
+}
+.grp {
+  margin-bottom: 10px;
+}
+.grp > h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  margin: 0;
+  font: 500 12px var(--font-ui);
+  color: var(--fg-2);
+}
+.grp > h3 svg {
+  width: 11px;
+  height: 11px;
+  color: var(--fg-3);
+}
+.f {
+  display: grid;
+  grid-template-columns: 1fr 104px;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+}
+.f label {
+  font-size: 12px;
+  color: var(--fg-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.f .v {
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #15171c;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 7px;
+  font: 400 12px var(--font-mono);
+  overflow: hidden;
+}
+.f .v u {
+  text-decoration: none;
+  color: var(--fg-2);
+  font-size: 11px;
+  margin-left: 4px;
+}
+.props-empty {
+  padding: 16px 10px;
+  color: var(--fg-2);
+  font-size: 12px;
+}
+
+.tab-placeholder {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: var(--fg-2);
+  font-size: 13px;
+}
+
+.load-state {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: var(--fg-2);
+  font-size: 13px;
+  gap: 8px;
+  text-align: center;
+  padding: 24px;
+}
+.load-state.error {
+  color: var(--bad);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Общая раскладка «страничных» экранов (Устойчивость / Сравнение / Проверка):
+   без рамок вокруг каждого блока — разделители и воздух, один акцент. */
+
+.screen {
+  flex: 1;
+  overflow: auto;
+  padding: 20px 22px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.screen-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.screen-head h1 {
+  margin: 0;
+  font: 500 14px var(--font-ui);
+  color: var(--fg);
+}
+.screen-head .hint {
+  font-size: 12px;
+  color: var(--fg-2);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--line);
+}
+.block:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.block-head h2 {
+  margin: 0;
+  font: 500 13px var(--font-ui);
+  color: var(--fg);
+}
+.block-note {
+  font-size: 12px;
+  color: var(--fg-2);
+  line-height: 1.5;
+  max-width: 72ch;
+}
+
+.btn {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--fg);
+  font: 400 12px var(--font-ui);
+  padding: 6px 13px;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+.btn:hover:not(:disabled) {
+  background: #22262e;
+}
+.btn:disabled {
+  color: var(--fg-2);
+}
+.btn.primary {
+  border-color: var(--accent-strong);
+}
+.btn.primary:hover:not(:disabled) {
+  background: var(--accent-a16);
+}
+
+/* таблицы (устойчивость маршрута, сравнение, самопроверка) */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.tbl th,
+.tbl td {
+  text-align: left;
+  padding: 7px 12px 7px 0;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tbl th {
+  color: var(--fg-2);
+  font-weight: 500;
+  font-size: 11px;
+}
+.tbl td.num,
+.tbl th.num {
+  font-family: var(--font-mono);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tbl tbody tr:last-child td {
+  border-bottom: 1px solid var(--line);
+}
+.tbl tfoot td {
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+  color: var(--fg);
+  font-weight: 500;
+  padding-top: 9px;
+}
+.tbl-wrap {
+  overflow-x: auto;
+}
+
+.delta-up {
+  color: var(--ok);
+}
+.delta-down {
+  color: var(--bad);
+}
+.delta-flat {
+  color: var(--fg-2);
+}
+.flag-ok {
+  color: var(--ok);
+}
+.flag-bad {
+  color: var(--bad);
+}
+
+/* устойчивость — ленты запаса связности во всю ширину */
+.mstrips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mstrip-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 56px;
+  align-items: center;
+  gap: 12px;
+}
+.mstrip-row .n {
+  font: 400 12px var(--font-mono);
+  color: var(--fg-2);
+}
+.mstrip {
+  height: 15px;
+  border-radius: 3px;
+  display: flex;
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  background: #202329;
+  cursor: pointer;
+  width: 100%;
+}
+.mstrip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.mstrip i {
+  height: 100%;
+  display: block;
+}
+.mstrip-p {
+  font: 500 12px var(--font-mono);
+  text-align: right;
+}
+.mstrip-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--fg-2);
+  flex-wrap: wrap;
+}
+.mstrip-legend .sw {
+  display: inline-block;
+  width: 22px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+/* устойчивость — диаграмма причин отсутствия связи */
+.reason-bar {
+  height: 16px;
+  border-radius: 3px;
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+}
+.reason-bar i {
+  height: 100%;
+  display: block;
+}
+.reason-bar i + i {
+  border-left: 2px solid var(--panel);
+}
+.reason-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.reason-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.reason-row .sw {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}
+.reason-row .lbl {
+  color: var(--fg);
+}
+.reason-row .cnt {
+  font: 500 12px var(--font-mono);
+  color: var(--fg);
+  text-align: right;
+  min-width: 3ch;
+}
+.reason-row .pct {
+  font: 400 11px var(--font-mono);
+  color: var(--fg-2);
+  text-align: right;
+  min-width: 5ch;
+}
+
+/* панель параметров — замечания проверки сценария (путь — сообщение),
+   загрузка файла: то же начертание, но цвет --bad — не только цвет, текст
+   сообщения тоже есть, это не индикатор-точка */
+.issues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--bad);
+  line-height: 1.4;
+}
+
+/* сравнение — список изменённых параметров */
+.changes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.changes-list li {
+  display: flex;
+  gap: 9px;
+  font-size: 12px;
+  color: var(--fg);
+  line-height: 1.5;
+}
+.changes-list li::before {
+  content: "—";
+  color: var(--fg-3);
+  flex: none;
+}
+
+.field-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.field-row .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 200px;
+}
+.field-row label {
+  font-size: 12px;
+  color: var(--fg-2);
+}
+.field-row select {
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #15171c;
+  color: var(--fg);
+  font: 400 12px var(--font-ui);
+  padding: 0 8px;
+}
+
+.progress-note {
+  font-size: 12px;
+  color: var(--fg-2);
+}
+
+/* проверка расчёта — итог с одного взгляда */
+.selftest-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.selftest-summary .headline {
+  font: 500 22px var(--font-mono);
+  color: var(--fg);
+}
+.selftest-summary .headline.flag-bad {
+  color: var(--bad);
+}
+.selftest-summary .sub {
+  font-size: 12px;
+  color: var(--fg-2);
+}

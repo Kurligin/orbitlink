@@ -1,0 +1,39 @@
+[project]
+name = "orbitlink"
+version = "1.0.0"
+description = "Проектирование устойчивой спутниковой группировки: расчёт покрытия, маршрутизация, анализ отказов"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.8",
+    "sqlalchemy>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "httpx>=0.27", "black>=24.0", "ruff>=0.6"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["orbitlink*"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI требует вызовы Depends()/Query() в значениях по умолчанию —
+# это идиоматичный паттерн библиотеки, а не изменяемый аргумент по ошибке.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

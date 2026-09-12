@@ -1,0 +1,11 @@
+# Зависимости и сборки, сделанные на машине разработчика, в образ не попадают:
+# node_modules под macOS несовместим с Linux-образом, venv привязан к хосту.
+**/node_modules
+frontend/dist
+backend/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/*.db
+.git
