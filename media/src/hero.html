@@ -1,0 +1,141 @@
+<!doctype html>
+<!--
+  Шапка README. Пересобрать из корня репозитория (нужны Chrome, cwebp и шрифт Inter в системе):
+
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+    --force-device-scale-factor=1 --window-size=2048,768 --allow-file-access-from-files \
+    --screenshot=/tmp/hero.png "file://$PWD/media/src/hero.html"
+  cwebp -q 90 /tmp/hero.png -o media/hero.webp
+-->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "InterH"; font-weight: 400; src: local("Inter Regular"), local("Inter-Regular"); }
+  @font-face { font-family: "InterH"; font-weight: 500; src: local("Inter Medium"), local("Inter-Medium"); }
+  @font-face { font-family: "InterH"; font-weight: 600; src: local("Inter SemiBold"), local("Inter-SemiBold"); }
+  @font-face { font-family: "InterH"; font-weight: 700; src: local("Inter Bold"), local("Inter-Bold"); }
+  @font-face { font-family: "InterH"; font-weight: 800; src: local("Inter ExtraBold"), local("Inter-ExtraBold"); }
+
+  :root {
+    --bg: #16181d;
+    --panel: #1c1f26;
+    --line: #2a2e37;
+    --fg: #e8eaed;
+    --fg-2: #9aa0aa;
+    --accent: #4a8cff;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 2048px;
+    height: 768px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg);
+    font-family: "InterH", sans-serif;
+    color: var(--fg);
+  }
+
+  /* Полярная сетка на фоне: тот же мотив, что у 2D-проекции сервиса */
+  .grid { position: absolute; left: 0; top: 0; }
+
+  .eyebrow {
+    position: absolute;
+    left: 110px;
+    top: 150px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .title {
+    position: absolute;
+    left: 104px;
+    top: 186px;
+    font-size: 150px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -4px;
+    color: var(--fg);
+  }
+  .lead {
+    position: absolute;
+    left: 110px;
+    top: 392px;
+    width: 740px;
+    font-size: 32px;
+    line-height: 1.4;
+    font-weight: 400;
+    color: var(--fg);
+    opacity: .92;
+  }
+  .foot {
+    position: absolute;
+    left: 110px;
+    top: 600px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .bars { display: flex; gap: 14px; }
+  .bars i { display: block; width: 46px; height: 6px; border-radius: 3px; background: var(--accent); }
+  .bars i + i { background: #8fb6ff; }
+  .foot p {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.45;
+    font-weight: 500;
+    color: var(--fg-2);
+  }
+
+  .card {
+    position: absolute;
+    left: 920px;
+    top: 80px;
+    width: 1000px;
+    height: 606px;
+    border-radius: 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 0 1px rgba(74, 140, 255, .08);
+    overflow: hidden;
+  }
+  /* Кадр сервиса: вьюпорт и сводка справа, без левой колонки */
+  .card img {
+    position: absolute;
+    left: -254px;
+    top: -30px;
+    width: 1254px;
+  }
+</style>
+</head>
+<body>
+  <svg class="grid" width="2048" height="768" viewBox="0 0 2048 768" aria-hidden="true">
+    <g fill="none" stroke="#2a2e37" stroke-width="1.5">
+      <circle cx="1420" cy="383" r="260"/>
+      <circle cx="1420" cy="383" r="420"/>
+      <circle cx="1420" cy="383" r="580"/>
+      <circle cx="1420" cy="383" r="740"/>
+      <line x1="1420" y1="-400" x2="1420" y2="1200"/>
+      <line x1="620" y1="383" x2="2220" y2="383"/>
+      <line x1="854" y1="-183" x2="1986" y2="949"/>
+      <line x1="1986" y1="-183" x2="854" y2="949"/>
+    </g>
+  </svg>
+
+  <div class="eyebrow">Спутниковая связь на Севере</div>
+  <div class="title">OrbitLink</div>
+  <div class="lead">Проектирует спутниковую группировку и показывает, где связь держится, а где рвётся при отказах</div>
+  <div class="foot">
+    <div class="bars"><i></i><i></i></div>
+    <p>Кейс «Проектирование устойчивой спутниковой группировки»<br>КосмоХакатон 2026, Нижний Новгород</p>
+  </div>
+
+  <div class="card">
+    <img src="../screens/outage-s20.webp" alt="">
+  </div>
+
+  <div style="position:absolute;left:1846px;top:12px;width:142px;height:142px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0,#e3e8ef 35%,#a7b2c3 100%);box-shadow:0 8px 22px rgba(0,0,0,.5),inset 0 0 0 7px rgba(255,255,255,.35),inset 0 0 0 9px #8b98ac;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#0B1E4A"><div style="font-weight:800;font-size:64px;line-height:58px">2</div><div style="font-weight:700;font-size:17px;letter-spacing:3px;margin-top:4px">МЕСТО</div></div>
+</body>
+</html>
